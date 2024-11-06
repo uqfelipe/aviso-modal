@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+
+    /* Estilo para o modal */
+    .modal {
+      display: none; /* Esconde o modal por padrão */
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9); /* Fundo mais escuro e ofuscado */
+      pointer-events: all;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .modal-content {
+      background-color: #1c1c1c;
+      border-radius: 15px;
+      width: 80%;
+      max-width: 500px;
+      margin: 15% auto;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.8); /* Sombra mais intensa */
+      border: 2px solid #ffbc00; /* Cor amarela vibrante, estilo GTA */
+    }
+
+    /* Animação de fade-in */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Estilo para o título */
+    .modal-header {
+      font-size: 30px;
+      font-weight: bold;
+      color: #ffbc00; /* Cor GTA amarela */
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Linha abaixo do título */
+    .line {
+      width: 80%;
+      margin: 10px auto;
+      border-bottom: 2px solid #ffbc00;
+    }
+
+    /* Estilo para a mensagem */
+    .modal-body {
+      font-size: 20px;
+      color: #fff;
+      margin-top: 20px;
+      line-height: 1.8;
+      padding: 0 10px;
+      text-align: left;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Atenção
+      </div>
+      <div class="line"></div> <!-- Linha abaixo do título -->
+      <div class="modal-body">
+        <span id="modalMessage"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Função para formatar a data no formato de Brasília (DD/MM/YYYY HH:mm:ss)
+    function formatarDataBrasilia(dataHora) {
+      const options = { 
+        timeZone: 'America/Sao_Paulo',
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit'
+      };
+
+      const data = new Date(dataHora).toLocaleString('pt-BR', options);
+      return data;
+    }
+
+    // Função para verificar se a data do pagamento já está vencida
+    function verificarVencimento(dataHora, mensagem) {
+      const dataAtual = new Date();
+      const horaBrasilia = new Date(dataAtual.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+
+      const partesDataHora = dataHora.split(' ');
+      const dataPartes = partesDataHora[0].split('/');
+      const horaPartes = partesDataHora[1].split(':');
+      const dataFormatada = new Date(`${dataPartes[2]}-${dataPartes[1]}-${dataPartes[0]}T${horaPartes[0]}:${horaPartes[1]}:00`);
+
+      // Verifica se a data e hora do pagamento já estão vencidas
+      if (horaBrasilia > dataFormatada) {
+        document.getElementById("modalMessage").innerText = mensagem || "Pagamento já está vencido!";
+        document.getElementById("modal").style.display = "block";
+      }
+    }
+
+    // Função para carregar o arquivo JSON e verificar a data
+    function carregarData() {
+      fetch('data.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erro entre em contato com Felipe pelo telegram @ufelipe');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (!data || Object.keys(data).length === 0) {
+            throw new Error('O arquivo JSON está vazio');
+          }
+          verificarVencimento(data.data_hora_brasilia, data.mensagem);
+        })
+        .catch(error => {
+          // Exibe o modal com a mensagem personalizada em caso de erro ou JSON vazio
+          document.getElementById("modalMessage").innerText = "Erro entre em contato com Felipe pelo telegram @ufelipe";
+          document.getElementById("modal").style.display = "block";
+        });
+    }
+
+    // Chama a função de carregar a data ao carregar a página
+    window.onload = carregarData;
+  </script>
+</body>
+</html>
